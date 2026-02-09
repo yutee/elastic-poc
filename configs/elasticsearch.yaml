@@ -1,0 +1,20 @@
+cluster.name: "poc-cluster"
+node.name: es01
+discovery.type: single-node
+
+# Security settings
+xpack.security.enabled: true
+
+# HTTP layer (Client communication)
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: certs/instance/instance.key
+xpack.security.http.ssl.certificate: certs/instance/instance.crt
+xpack.security.http.ssl.certificate_authorities: certs/ca/ca.crt
+xpack.security.http.ssl.verification_mode: certificate
+
+# Transport layer (Node-to-node)
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: certs/instance/instance.key
+xpack.security.transport.ssl.certificate: certs/instance/instance.crt
+xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
+xpack.security.transport.ssl.verification_mode: certificate

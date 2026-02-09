@@ -1,0 +1,16 @@
+server.name: kibana
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["https://elasticsearch:9200"]
+
+# Authentication
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "elastic"
+
+# SSL for connecting to Elasticsearch
+elasticsearch.ssl.certificateAuthorities: ["config/certs/ca/ca.crt"]
+elasticsearch.ssl.verificationMode: certificate
+
+# Fleet & Security Encryption Keys (Must be 32+ characters)
+xpack.encryptedSavedObjects.encryptionKey: "aWFtZG9pbmd0aGlzZm9ydGhlc2FrZW9mZ29kCg"
+xpack.reporting.encryptionKey: "aWFtZG9pbmd0aGlzZm9ydGhlc2FrZW9mZ29kCg"
+xpack.security.encryptionKey: "aWFtZG9pbmd0aGlzZm9ydGhlc2FrZW9mZ29kCg"
