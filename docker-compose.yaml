@@ -26,7 +26,7 @@ services:
       - esdata:/usr/share/elasticsearch/data
       - ./certs:/usr/share/elasticsearch/config/certs:ro
       # should you want to use config files -- add this and remove whole `environment` block
-      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      # - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
 
   kibana:
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
@@ -45,7 +45,7 @@ services:
     volumes:
       - ./certs:/usr/share/kibana/config/certs:ro
       # should you want to use config files -- add this and remove whole `environment` block
-      - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yaml:ro
+      # - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yaml:ro
     depends_on:
       - elasticsearch
 

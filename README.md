@@ -1,14 +1,26 @@
-# Spinnging up elastic
+# Spinning up elastic
+
+### Prerequisites:
+- Linux Server
+- Docker and Docker compose
 
 To bring up elastic and kibana, we will be using SSL with insecure certs. This is to avoid back and forth with recent security measures in version 9.x.
 
-These are the steps to follow:
+### These are the steps to follow:
 ```bash
-cd ~/poc
+git clone https://github.com/yutee/elastic-poc.git
+cd ./elastic-poc
 
 # 1. Stop everything and clean up
-docker compose down -v
 rm -rf certs
+
+# you actually do not need everything. if you have your own infra, you can delete the infra dir
+rm -rf infra
+
+# if you want to use environments in docker compose, you can also remove the config dir
+rm -rf configs
+
+# ensure you have env with the details specified in .env.example before you proceed
 
 # 2. Create certificate directory
 mkdir -p certs
@@ -26,21 +38,6 @@ docker run --rm \
   bash -c "cd /certs && unzip -o ca.zip"
 
 # 5. Generate instance certificates
-docker run --rm \
-  -v "$(pwd)/certs:/certs" \
-  docker.elastic.co/elasticsearch/elasticsearch:9.3.0 \
-  bin/elasticsearch-certutil cert \
-  --ca-cert /certs/ca/ca.crt \
-  --ca-key /certs/ca/ca.key \
-  --pem \
-  --out /certs/certs.zip \
-  --pass "" \
-  --dns elasticsearch \
-  --dns localhost \
-  --ip 127.0.0.1
-  
-# OR
-
 docker run --rm \
   -v "$(pwd)/certs:/certs" \
   docker.elastic.co/elasticsearch/elasticsearch:9.3.0 \
