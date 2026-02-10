@@ -1,4 +1,12 @@
-# Spinning up elastic
+# Spinning up elastic stack
+This handles spinning up elastic stack on an ubuntu server
+
+### Stack
+- Elasricsearch
+- Kibana
+- Fleet (beat)
+
+Version 9.x
 
 ### Prerequisites:
 - Linux Server
@@ -80,3 +88,10 @@ docker compose up -d kibana
 sleep 45
 docker logs kibana --tail 30
 ```
+
+## Configuring Fleet Server
+
+find file path for the certs. check mounted directory
+
+add this flag
+--fleet-server-es-ca=/etc/elastic-certs/ca.crt
