@@ -233,5 +233,5 @@ resource "azurerm_windows_virtual_machine" "windows" {
     version   = "latest"
   }
 
-  computer_name = "${var.project_name}-win-${count.index + 1}"
+  computer_name = "${var.project_name}-w-${count.index + 1}"
 }

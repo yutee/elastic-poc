@@ -1,0 +1,70 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: es02
+    restart: unless-stopped
+    extra_hosts:
+      - "es01:192.168.37.28"
+    environment:
+      - node.name=es02
+      - cluster.name=${CLUSTER_NAME}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/instance/es02.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/instance/es02.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.http.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/instance/es02.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/instance/es02.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - cluster.initial_master_nodes=es01,es02
+      - discovery.seed_hosts=es01:9300
+      - node.roles=master,data,ingest
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+      - ingest.geoip.downloader.enabled=false
+      - network.host=0.0.0.0
+      - network.publish_host=192.168.37.29  
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -u elastic:${ELASTIC_PASSWORD} https://localhost:9200/_cluster/health | grep -v '\"status\":\"red\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  package-registry:
+    image: docker.elastic.co/package-registry/distribution:lite-${STACK_VERSION}
+    container_name: elastic-epr
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  artifact-server:
+    image: nginx:stable-alpine
+    container_name: elastic-ear
+    restart: unless-stopped
+    ports:
+      - "8443:80"
+    volumes:
+      - ./artifacts:/usr/share/nginx/html:ro
+      - ./configs/nginx-artifacts.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  esdata2:

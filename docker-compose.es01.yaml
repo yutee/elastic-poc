@@ -1,0 +1,93 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: elasticsearch
+    restart: unless-stopped
+    # extra_hosts:
+    #   - "es02:192.168.37.29"  
+    environment:
+      - node.name=es01
+      - cluster.name=${CLUSTER_NAME}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/instance/instance.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/instance/instance.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.http.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/instance/instance.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/instance/instance.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+      - cluster.initial_master_nodes=es01,es02
+      - discovery.seed_hosts=es02:9300
+      - node.roles=master,data,ingest
+      - ingest.geoip.downloader.enabled=false
+      - network.host=0.0.0.0
+      - network.publish_host=192.168.37.28
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs:ro
+      # should you want to use config files -- add this and remove whole `environment` block
+      # - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -u elastic:${ELASTIC_PASSWORD} https://localhost:9200/_cluster/health | grep -v '\"status\":\"red\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    restart: unless-stopped
+    extra_hosts:
+     - "es01:192.168.37.28"
+     - "es02:192.168.37.29" 
+    environment:
+      - ELASTICSEARCH_HOSTS=["https://es01:9200","https://es02:9200"]
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca/ca.crt
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      # Air-gap: Fleet and Package Registry
+      - XPACK_FLEET_REGISTRYURL=http://192.168.37.29:8080
+      - xpack.fleet.registryUrl=http://192.168.37.29:8080  
+      - XPACK_FLEET_ISAIGAPPED=true
+      - xpack.fleet.isAirGapped=true  
+      - XPACK_FLEET_INTERNAL_REGISTRY_KIBANAVERSIONCHECKENABLED=false
+      - XPACK_FLEET_AGENTDOWNLOADBASEURL=http://192.168.37.29:8443/agent
+      # Air-gap: Telemetry
+      - TELEMETRY_ENABLED=false
+      - TELEMETRY_OPTIN=false
+      # Air-gap: Maps
+      - MAP_INCLUDEELASTICMAPSSERVICE=false
+      - XPACK_MAPS_SHOWMAPSAPPSLINK=false
+      # Air-gap: News feed and upgrade checks
+      - NEWSFEED_ENABLED=false
+      - XPACK_KIBANA_UPGRADES_ENABLED=false
+      # Air-gap: Endpoint artifact polling (off, not using Defend)
+      - XPACK_SECURITYSOLUTION_PACKAGERPOLLINGENABLED=false
+      # Reporting: Chromium compatibility on RHEL containers
+      - XPACK_REPORTING_CAPTURE_BROWSER_CHROMIUM_DISABLESANDBOX=true
+      - ELASTICSEARCH_REQUESTTIMEOUT=60000
+      - KIBANA_INIT_TIMEOUT=120s  
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./certs:/usr/share/kibana/config/certs:ro
+      # should you want to use config files -- add this and remove whole `environment` block
+      # - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yaml:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  esdata:

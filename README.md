@@ -79,7 +79,7 @@ docker exec elasticsearch curl -s -X POST \
   -u elastic:elastic \
   "https://localhost:9200/_security/user/kibana_system/_password" \
   -H "Content-Type: application/json" \
-  -d '{"password":"elastic"}'
+  -d '{"password":"Pass123"}'
 
 # 11. Start Kibana
 docker compose up -d kibana
@@ -95,3 +95,16 @@ find file path for the certs. check mounted directory
 
 add this flag
 --fleet-server-es-ca=/etc/elastic-certs/ca.crt
+
+### other commands needed
+sysctl net.ipv4.ip_forward
+
+
+
+# Apply your change immediately
+```bash
+  sudo sysctl -w vm.max_map_count=262144 
+
+  # Verify it worked
+  sysctl vm.max_map_count
+```
